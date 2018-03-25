@@ -18,6 +18,10 @@ jar {
         attributes("Implementation-Title": project.name,
             "Main-Class": mainClassName)
     }
+
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
 }
 
 repositories {
@@ -37,6 +41,7 @@ jacoco {
 }
 
 dependencies {
+    compile 'ch.qos.logback:logback-classic:1.2.3'
     compileOnly 'org.projectlombok:lombok:1.16.20'
     testCompile(
             //JUnit

@@ -1,19 +1,24 @@
 package uj.jwzp.w2.e3;
 
-import java.io.*;
-import java.math.BigDecimal;
-import java.nio.file.Path;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.rmi.UnexpectedException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.*;
+import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.util.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class TransactionsGenerator {
+    private static Logger logger = LoggerFactory.getLogger(TransactionsGenerator.class);
     private TransactionsGenerator(){ } //Main class, no constructor needed
 
     public static HashMap<String, Property> getDefaultSettings() {
+        logger.info("Getting default settings.");
         HashMap<String, Property> settings = new HashMap<>();
         settings.put("customerIds", new IntRangeProperty(1, 20));
         ZonedDateTime today = ZonedDateTime.now();
@@ -34,6 +39,7 @@ public class TransactionsGenerator {
         HashMap<String, Property> settings,
         String[] args
     ) throws UnexpectedException  {
+        logger.info("Trying to read settings from delivered arguments.");
         String key = null;
 
         for (String arg : args) {
@@ -76,6 +82,7 @@ public class TransactionsGenerator {
     }
 
     public static void main(String[] args) throws IOException {
+        logger.trace("Started program - TransactionsGenerator.main("+ Arrays.toString(args)+");");
         HashMap<String, Property> settings = getDefaultSettings();
 
         readSettingsFromArgs(settings, args);
@@ -88,15 +95,21 @@ public class TransactionsGenerator {
         String itemsInputFileLocation = settings.get("itemsFile").toString();
         String outputFilesLocation = settings.get("outDir").toString();
 
+        logger.info("Successfully merged delivered settings with defaults.");
+
         try (FileInputStream input = new FileInputStream(itemsInputFileLocation)) {
+            logger.trace("Creating output directory if it does not exist.");
+            Files.createDirectories(Paths.get(outputFilesLocation));
             List<Item> availableItems = ItemsReader.getFromCSV(input);
             for (int i = 1; i <= eventsCount.getValue(); i++) {
+                logger.trace("Generating transaction "+i);
                 Collections.shuffle(availableItems);
                 int count = itemsCount.random();
                 LinkedHashMap<Item, Integer> orderedItems = new LinkedHashMap<>();
-                for (int j = 1; j <= count; j++) {
-                    orderedItems.put(availableItems.get(j), itemsQuantity.random());
+                for (int j = 0; j < count; j++) {
+                    orderedItems.put(availableItems.get(j%availableItems.size()), itemsQuantity.random());
                 }
+                logger.trace("Writing transaction data to JSON file.");
                 FileOutputStream output =
                              new FileOutputStream(Paths.get(outputFilesLocation, i+".json").toString());
                 output.write(
@@ -109,7 +122,10 @@ public class TransactionsGenerator {
                 );
             }
         } catch (IOException e) {
+            logger.error(e.getMessage());
             throw e;
         }
+
+        logger.info("Successfully generated and saved "+eventsCount.getValue()+" transactions.");
     }
 }
