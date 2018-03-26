@@ -10,8 +10,9 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public class ItemsReaderTest {
-    private final static String INVALID_CSV_HEADER1 = "invalid,price";
+    private final static String INVALID_CSV_HEADER1 = "invalid";
     private final static String INVALID_CSV_HEADER2 = "name,invalid";
+    private final static String INVALID_CSV_PRODUCT1 = "testName";
     private final static String CORRECT_CSV_HEADER = "name,price";
     private final static String CORRECT_CSV_PRODUCT1 = "\"testName\",1.37";
     private final static String TEST_PRODUCT1_NAME = "testName";
@@ -58,6 +59,18 @@ public class ItemsReaderTest {
 
         Mockito.when(mockedReader.readLine())
                 .thenReturn(INVALID_CSV_HEADER2)
+                .thenReturn(null);
+
+        ItemsReader.getFromCSV(mockedReader);
+    }
+
+    @Test(expected = IOException.class)
+    public void shouldThrowExceptionWhenCSVIncorrect3() throws IOException {
+        BufferedReader mockedReader = Mockito.mock(BufferedReader.class);
+
+        Mockito.when(mockedReader.readLine())
+                .thenReturn(CORRECT_CSV_HEADER)
+                .thenReturn(INVALID_CSV_PRODUCT1)
                 .thenReturn(null);
 
         ItemsReader.getFromCSV(mockedReader);
