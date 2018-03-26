@@ -1,7 +1,11 @@
 package uj.jwzp.w2.e3;
 
-import java.io.FileInputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.BufferedReader;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -9,9 +13,6 @@ import java.rmi.UnexpectedException;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.*;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TransactionsGenerator {
     private static Logger logger = LoggerFactory.getLogger(TransactionsGenerator.class);
@@ -97,7 +98,7 @@ public class TransactionsGenerator {
 
         logger.info("Successfully merged delivered settings with defaults.");
 
-        try (FileInputStream input = new FileInputStream(itemsInputFileLocation)) {
+        try (BufferedReader input = new BufferedReader(new FileReader(itemsInputFileLocation))) {
             logger.trace("Creating output directory if it does not exist.");
             Files.createDirectories(Paths.get(outputFilesLocation));
             List<Item> availableItems = ItemsReader.getFromCSV(input);
